@@ -22,27 +22,33 @@ export default function Home() {
   };
 
   return (
-    <div className="grid grid-cols-12 h-full">
+    <div className="flex flex-row w-full h-screen" style={{ width: '100vw', height: '100vh', display: 'flex', paddingLeft: '10%', paddingRight: '10%' }}>
       {/* Pane 1: Topics List */}
-      <div className="col-span-3 h-full">
-        <TopicTabs />
+      <div className="border-r border-gray-200" style={{ height: '90vh', flex: '0 0 10%', justifyItems: 'center' }}>
+        <div className="h-full flex items-center justify-center p-4">
+          <div className="w-full max-w-xs">
+            <TopicTabs />
+          </div>
+        </div>
       </div>
       
       {/* Pane 2: Prompt Cards */}
-      <div className="col-span-4 h-full bg-gray-50">
+      <div className="bg-gray-50" style={{ height: '90vh', flex: '0 0 35%', justifyItems: 'center' }}>
         <div className="h-full flex flex-col">
-          <div className="p-4 border-b bg-white">
+          <div className="p-4 border-b bg-white text-center">
             <h2 className="text-lg font-semibold">
               {selectedTopic ? selectedTopic.name : 'Select a Topic'}
             </h2>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
             {selectedTopic ? (
-              <PromptCards
-                prompts={selectedTopic.prompts}
-                topicId={selectedTopic.id}
-                onReorder={handleReorder}
-              />
+              <div className="w-full max-w-md">
+                <PromptCards
+                  prompts={selectedTopic.prompts}
+                  topicId={selectedTopic.id}
+                  onReorder={handleReorder}
+                />
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
                 <p>Select a topic to view prompts</p>
@@ -53,8 +59,12 @@ export default function Home() {
       </div>
       
       {/* Pane 3: Input Area */}
-      <div className="col-span-5 h-full">
-        <InputArea />
+      <div className="border-l border-gray-200" style={{ height: '90vh', flex: '0 0 35%', justifyItems: 'center' }}>
+        <div className="h-full flex items-center justify-center p-4">
+          <div className="w-full max-w-lg">
+            <InputArea />
+          </div>
+        </div>
       </div>
     </div>
   );

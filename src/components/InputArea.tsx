@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Copy, Trash2, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/lib/store';
 import { Prompt } from '@/types';
@@ -9,23 +9,7 @@ import { Prompt } from '@/types';
 export function InputArea() {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { topics, selectedTopicId, addPrompt } = useAppStore();
-
-  const handleCopy = async () => {
-    if (text.trim()) {
-      try {
-        await navigator.clipboard.writeText(text);
-        // Could add a toast notification here
-      } catch (err) {
-        console.error('Failed to copy text:', err);
-      }
-    }
-  };
-
-  const handleClear = () => {
-    setText('');
-    textareaRef.current?.focus();
-  };
+  const { selectedTopicId, addPrompt } = useAppStore();
 
   const handleSaveToTopic = async () => {
     if (!text.trim() || !selectedTopicId) return;
@@ -55,7 +39,6 @@ export function InputArea() {
         
         setText(beforeCursor + dragData.text + afterCursor);
         
-        // Set cursor position after inserted text
         setTimeout(() => {
           if (textareaRef.current) {
             const newPosition = cursorPosition + dragData.text.length;
@@ -74,38 +57,18 @@ export function InputArea() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white border-l">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Input Area</h2>
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCopy}
-              disabled={!text.trim()}
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy All
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleClear}
-              disabled={!text.trim()}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSaveToTopic}
-              disabled={!text.trim() || !selectedTopicId}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save to Topic
-            </Button>
-          </div>
+          <h2 className="text-lg font-semibold">New Prompt</h2>
+          <Button
+            size="sm"
+            onClick={handleSaveToTopic}
+            disabled={!text.trim() || !selectedTopicId}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
         </div>
       </div>
       
