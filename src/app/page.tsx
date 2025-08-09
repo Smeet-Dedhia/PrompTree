@@ -22,9 +22,9 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-row w-full h-screen" style={{ width: '100vw', height: '100vh', display: 'flex', paddingLeft: '10%', paddingRight: '10%' }}>
+    <div className="flex flex-row w-full h-screen bg-gray-50" style={{ width: '100vw', height: '100vh', display: 'flex', paddingLeft: '10%', paddingRight: '10%' }}>
       {/* Pane 1: Topics List */}
-      <div className="border-r border-gray-200" style={{ height: '90vh', flex: '0 0 10%', justifyItems: 'center' }}>
+      <div className="border-r border-gray-200 bg-white" style={{ height: '90vh', flex: '0 0 10%', justifyItems: 'center' }}>
         <div className="h-full flex items-center justify-center p-4">
           <div className="w-full max-w-xs">
             <TopicTabs />
@@ -35,12 +35,12 @@ export default function Home() {
       {/* Pane 2: Prompt Cards */}
       <div className="bg-gray-50" style={{ height: '90vh', flex: '0 0 35%', justifyItems: 'center' }}>
         <div className="h-full flex flex-col">
-          <div className="p-4 border-b bg-white text-center">
-            <h2 className="text-lg font-semibold">
+          <div className="m-4 mb-2 p-4 bg-white border rounded-lg shadow-sm">
+            <h2 className="text-center text-lg font-semibold">
               {selectedTopic ? selectedTopic.name : 'Select a Topic'}
             </h2>
           </div>
-          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
+          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 pt-0">
             {selectedTopic ? (
               <div className="w-full max-w-md">
                 <PromptCards
@@ -50,8 +50,10 @@ export default function Home() {
                 />
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <p>Select a topic to view prompts</p>
+              <div className="w-full max-w-md p-4 bg-white border rounded-lg shadow-sm">
+                <div className="flex items-center justify-center h-32 text-gray-500">
+                  <p>Select a topic to view prompts</p>
+                </div>
               </div>
             )}
           </div>
@@ -59,11 +61,9 @@ export default function Home() {
       </div>
       
       {/* Pane 3: Input Area */}
-      <div className="border-l border-gray-200" style={{ height: '90vh', flex: '0 0 35%', justifyItems: 'center' }}>
+      <div className="border-l border-gray-200 bg-white" style={{ height: '90vh', flex: '0 0 35%', justifyItems: 'center' }}>
         <div className="h-full flex items-center justify-center p-4">
-          <div className="w-full max-w-lg">
-            <InputArea />
-          </div>
+          <InputArea />
         </div>
       </div>
     </div>

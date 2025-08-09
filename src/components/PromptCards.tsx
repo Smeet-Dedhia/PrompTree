@@ -26,21 +26,23 @@ export function PromptCards({ prompts, topicId, onReorder }: PromptCardsProps) {
 
   if (prompts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        <div className="text-center">
-          <p>No prompts yet</p>
-          <p className="text-sm">Drag text from the input area to create prompts</p>
+      <div className="w-full p-4 bg-white border rounded-lg shadow-sm">
+        <div className="flex items-center justify-center h-32 text-gray-500">
+          <div className="text-center">
+            <p>No prompts yet</p>
+            <p className="text-sm">Drag text from the input area to create prompts</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="space-y-3">
       {prompts.map((prompt) => (
         <div
           key={prompt.id}
-          className="group relative bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-move"
+          className="group relative bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-move"
           draggable
           onDragStart={(e) => {
             e.dataTransfer.setData('application/json', JSON.stringify(
@@ -48,34 +50,36 @@ export function PromptCards({ prompts, topicId, onReorder }: PromptCardsProps) {
             ));
           }}
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">{prompt.title}</h3>
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                {prompt.text}
-              </p>
+          <div className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-medium text-gray-900 truncate">{prompt.title}</h3>
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                  {prompt.text}
+                </p>
+              </div>
+              <div className="flex items-center space-x-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <EditPromptDialog
+                  topicId={topicId}
+                  prompt={prompt}
+                  trigger={
+                    <Button size="sm" variant="ghost">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDelete(prompt.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <EditPromptDialog
-                topicId={topicId}
-                prompt={prompt}
-                trigger={
-                  <Button size="sm" variant="ghost">
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                }
-              />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDelete(prompt.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-50 transition-opacity">
+              <GripVertical className="h-4 w-4 text-gray-400" />
             </div>
-          </div>
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-50 transition-opacity">
-            <GripVertical className="h-4 w-4 text-gray-400" />
           </div>
         </div>
       ))}
