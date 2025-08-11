@@ -107,6 +107,7 @@ export function SaveLoadButtons() {
         variant="outline"
         onClick={handleSave}
         disabled={topics.length === 0}
+        className="border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-colors"
       >
         <Download className="h-4 w-4 mr-2" />
         Export
@@ -115,6 +116,7 @@ export function SaveLoadButtons() {
         size="sm"
         variant="outline"
         onClick={handleLoad}
+        className="border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
       >
         <Upload className="h-4 w-4 mr-2" />
         Import
@@ -124,6 +126,7 @@ export function SaveLoadButtons() {
         variant="outline"
         onClick={handleClear}
         disabled={topics.length === 0}
+        className="border-2 border-gray-200 hover:border-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
       >
         <Trash2 className="h-4 w-4 mr-2" />
         Clear

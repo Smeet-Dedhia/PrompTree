@@ -30,33 +30,46 @@ export function AddTopicDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-colors font-medium"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Topic
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Topic</DialogTitle>
+          <DialogTitle className="text-xl font-bold">Add New Topic</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Topic Name
+            </label>
             <Input
-              placeholder="Enter topic name"
+              placeholder="Enter topic name..."
               value={topicName}
               onChange={(e) => setTopicName(e.target.value)}
+              className="border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
               autoFocus
             />
           </div>
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              className="border-2 border-gray-200 hover:border-gray-400 transition-colors"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={!topicName.trim()}>
+            <Button 
+              type="submit" 
+              disabled={!topicName.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+            >
               Add Topic
             </Button>
           </div>
