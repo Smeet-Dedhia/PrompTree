@@ -2,14 +2,16 @@
 
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { AddTopicDialog } from './AddTopicDialog';
 import { cn } from '@/lib/utils';
-import { Folder, FolderOpen, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Folder, FolderOpen, Pencil, Trash2, Check, X, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function TopicTabs() {
-  const { topics, selectedTopicId, setSelectedTopic, editTopic, deleteTopic } = useAppStore();
+  const { topics, selectedTopicId, setSelectedTopic, editTopic, deleteTopic, addTopic } = useAppStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [showAddOverlay, setShowAddOverlay] = useState(false);
+  const [newTopicName, setNewTopicName] = useState('');
 
   const handleStartEdit = (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
@@ -34,6 +36,14 @@ export function TopicTabs() {
     e.stopPropagation();
     if (confirm(`Are you sure you want to delete the topic "${name}"? All prompts inside this topic will be permanently deleted.`)) {
       await deleteTopic(id);
+    }
+  };
+
+  const handleAddTopic = async () => {
+    if (newTopicName.trim()) {
+      await addTopic(newTopicName.trim());
+      setNewTopicName('');
+      setShowAddOverlay(false);
     }
   };
 
@@ -148,8 +158,55 @@ export function TopicTabs() {
         )}
       </div>
       
-      <div className="p-4 border-t border-slate-100 bg-slate-50/20">
-        <AddTopicDialog />
+      <div className="p-4 border-t border-slate-100 bg-slate-50/20 relative">
+        {showAddOverlay && (
+          <div className="absolute bottom-16 left-4 right-4 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Create Topic</h4>
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                placeholder="Topic name..."
+                value={newTopicName}
+                onChange={(e) => setNewTopicName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddTopic();
+                  if (e.key === 'Escape') setShowAddOverlay(false);
+                }}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all duration-150"
+                autoFocus
+              />
+              <div className="flex justify-end gap-1.5">
+                <button
+                  onClick={() => setShowAddOverlay(false)}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddTopic}
+                  disabled={!newTopicName.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none text-white text-xs font-semibold shadow-sm transition-colors"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45" />
+          </div>
+        )}
+
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            setShowAddOverlay(!showAddOverlay);
+            setNewTopicName('');
+          }}
+          className="w-full border border-indigo-200 bg-indigo-50/20 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-800 transition-all duration-150 font-medium rounded-xl h-9 hover:-translate-y-0.5 active:scale-98"
+        >
+          <Plus className="h-4 w-4 mr-1.5 flex-shrink-0" />
+          Add Topic
+        </Button>
       </div>
     </div>
   );

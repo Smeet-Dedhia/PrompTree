@@ -34,11 +34,23 @@ export function InputArea() {
         const beforeCursor = currentText.slice(0, cursorPosition);
         const afterCursor = currentText.slice(cursorPosition);
         
-        setText(beforeCursor + insertText + afterCursor);
+        let spacing = '';
+        if (beforeCursor.trim()) {
+          if (beforeCursor.endsWith('\n\n')) {
+            spacing = '';
+          } else if (beforeCursor.endsWith('\n')) {
+            spacing = '\n';
+          } else {
+            spacing = '\n\n';
+          }
+        }
+        
+        const newInsertion = spacing + insertText;
+        setText(beforeCursor + newInsertion + afterCursor);
         
         setTimeout(() => {
           if (textareaRef.current) {
-            const newPosition = cursorPosition + insertText.length;
+            const newPosition = cursorPosition + newInsertion.length;
             textareaRef.current.setSelectionRange(newPosition, newPosition);
             textareaRef.current.focus();
           }
@@ -113,11 +125,23 @@ export function InputArea() {
         const beforeCursor = text.slice(0, cursorPosition);
         const afterCursor = text.slice(cursorPosition);
         
-        setText(beforeCursor + dragData.text + afterCursor);
+        let spacing = '';
+        if (beforeCursor.trim()) {
+          if (beforeCursor.endsWith('\n\n')) {
+            spacing = '';
+          } else if (beforeCursor.endsWith('\n')) {
+            spacing = '\n';
+          } else {
+            spacing = '\n\n';
+          }
+        }
+        
+        const newInsertion = spacing + dragData.text;
+        setText(beforeCursor + newInsertion + afterCursor);
         
         setTimeout(() => {
           if (textareaRef.current) {
-            const newPosition = cursorPosition + dragData.text.length;
+            const newPosition = cursorPosition + newInsertion.length;
             textareaRef.current.setSelectionRange(newPosition, newPosition);
             textareaRef.current.focus();
           }

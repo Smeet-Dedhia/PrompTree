@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Edit2, Trash2, GripVertical, FileText, Search, Star, Copy, Check, Globe } from 'lucide-react';
+import { Edit2, Trash2, GripVertical, FileText, Search, Star, Copy, Check, Globe, Plus } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { EditPromptDialog } from './EditPromptDialog';
@@ -14,15 +14,21 @@ interface PromptCardsProps {
 }
 
 export function PromptCards({ topicId }: PromptCardsProps) {
-  const { topics, toggleStarPrompt, deletePrompt } = useAppStore();
+  const { topics, toggleStarPrompt, deletePrompt, addPrompt } = useAppStore();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [globalSearch, setGlobalSearch] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Quick Add States
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickTitle, setQuickTitle] = useState('');
+  const [quickText, setQuickText] = useState('');
+
   useEffect(() => {
     setSearchQuery('');
+    setShowQuickAdd(false);
   }, [topicId]);
 
   const handleDelete = async (promptTopicId: string, promptId: string) => {
@@ -42,6 +48,23 @@ export function PromptCards({ topicId }: PromptCardsProps) {
 
   const handleQuickInsert = (text: string) => {
     window.dispatchEvent(new CustomEvent('insert-prompt', { detail: text }));
+  };
+
+  const handleQuickSave = async () => {
+    if (!quickText.trim() || !topicId) return;
+
+    const titleValue = quickTitle.trim() || quickText.split('\n')[0].slice(0, 50) + (quickText.split('\n')[0].length > 50 ? '...' : '');
+
+    const newPrompt: Prompt = {
+      id: crypto.randomUUID(),
+      title: titleValue,
+      text: quickText.trim(),
+    };
+
+    await addPrompt(topicId, newPrompt);
+    setQuickTitle('');
+    setQuickText('');
+    setShowQuickAdd(false);
   };
 
   const getFilteredPrompts = () => {
@@ -88,6 +111,8 @@ export function PromptCards({ topicId }: PromptCardsProps) {
 
   return (
     <div className="space-y-4">
+      
+      {/* Search and Filters Dashboard Control Center */}
       <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -126,6 +151,24 @@ export function PromptCards({ topicId }: PromptCardsProps) {
             <Star className={cn("h-3.5 w-3.5", showStarredOnly && "fill-amber-500 text-amber-500")} />
             <span>Starred Only</span>
           </button>
+
+          {/* Quick Add Prompt Button */}
+          <button
+            onClick={() => {
+              setShowQuickAdd(!showQuickAdd);
+              setQuickTitle('');
+              setQuickText('');
+            }}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 active:scale-95",
+              showQuickAdd 
+                ? "bg-violet-50 border-violet-200 text-violet-700 shadow-xs" 
+                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+            )}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Quick Add</span>
+          </button>
           
           {(searchQuery || globalSearch || showStarredOnly) && (
             <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded-md ml-auto">
@@ -135,6 +178,44 @@ export function PromptCards({ topicId }: PromptCardsProps) {
         </div>
       </div>
 
+      {/* Collapsible Inline discreet Quick Add form */}
+      {showQuickAdd && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Quick Add Prompt</h4>
+          <div className="space-y-3">
+            <input
+              type="text"
+              placeholder="Prompt title (optional)..."
+              value={quickTitle}
+              onChange={(e) => setQuickTitle(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all duration-150"
+            />
+            <textarea
+              placeholder="Write prompt instructions here..."
+              value={quickText}
+              onChange={(e) => setQuickText(e.target.value)}
+              className="w-full h-24 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all duration-150 resize-none font-mono"
+            />
+            <div className="flex justify-end gap-1.5">
+              <button
+                onClick={() => setShowQuickAdd(false)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleQuickSave}
+                disabled={!quickText.trim()}
+                className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none text-white text-xs font-semibold shadow-sm transition-colors"
+              >
+                Save Prompt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prompts Cards Board */}
       <div className="space-y-3.5">
         {filteredList.length === 0 ? (
           <div className="w-full p-8 bg-white border border-slate-200 rounded-2xl shadow-sm text-center flex flex-col items-center justify-center min-h-[220px]">
