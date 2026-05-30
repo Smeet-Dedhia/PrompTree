@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 import { SaveLoadButtons } from './SaveLoadButtons';
 
 export function TopicTabs() {
-  const { topics, selectedTopicId, setSelectedTopic, editTopic, deleteTopic, addTopic } = useAppStore();
+  const { topics, selectedTopicId, setSelectedTopic, editTopic, deleteTopic, addTopic, addPrompt } = useAppStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [showAddOverlay, setShowAddOverlay] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
+  const [hoveredTopicId, setHoveredTopicId] = useState<string | null>(null);
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleStartEdit = (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
@@ -48,6 +51,35 @@ export function TopicTabs() {
     }
   };
 
+  const handleDropText = async (e: React.DragEvent, targetTopicId: string, topicName: string) => {
+    e.preventDefault();
+    setHoveredTopicId(null);
+    
+    try {
+      const droppedText = e.dataTransfer.getData('text/plain');
+      if (droppedText && droppedText.trim()) {
+        const textValue = droppedText.trim();
+        const titleValue = textValue.split('\n')[0].slice(0, 50) + (textValue.split('\n')[0].length > 50 ? '...' : '');
+        
+        const newPrompt = {
+          id: crypto.randomUUID(),
+          title: titleValue,
+          text: textValue,
+          tags: ['dragged'],
+          createdAt: Date.now()
+        };
+        
+        await addPrompt(targetTopicId, newPrompt);
+        setToastMessage(`Saved selection as new card in topic "${topicName}"!`);
+        setTimeout(() => {
+          setToastMessage(null);
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Failed to handle drop text:', err);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white border border-slate-200 rounded-2xl shadow-sm custom-shadow overflow-hidden">
       <div className="p-4 border-b border-slate-100 bg-slate-50/20 flex items-center justify-between">
@@ -70,16 +102,26 @@ export function TopicTabs() {
           topics.map((topic) => {
             const isSelected = selectedTopicId === topic.id;
             const isEditing = editingId === topic.id;
+            const isDragTarget = hoveredTopicId === topic.id;
 
             return (
               <div
                 key={topic.id}
                 onClick={() => !isEditing && setSelectedTopic(topic.id)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (hoveredTopicId !== topic.id) {
+                    setHoveredTopicId(topic.id);
+                  }
+                }}
+                onDragLeave={() => setHoveredTopicId(null)}
+                onDrop={(e) => handleDropText(e, topic.id, topic.name)}
                 className={cn(
                   'group flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer border border-transparent',
                   isSelected 
                     ? 'bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-100/50 shadow-sm text-indigo-900 font-medium' 
-                    : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900'
+                    : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900',
+                  isDragTarget && 'bg-indigo-50/80 border-indigo-300 scale-102 ring-2 ring-indigo-100 shadow-sm z-10'
                 )}
               >
                 <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -214,6 +256,18 @@ export function TopicTabs() {
           <SaveLoadButtons />
         </div>
       </div>
+
+      {toastMessage && (
+        <div className="absolute bottom-4 left-4 right-4 bg-emerald-500 text-white text-xs font-semibold py-2 px-3 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-between animate-in fade-in slide-in-from-bottom-3 duration-250 z-50">
+          <div className="flex items-center gap-1.5">
+            <Check className="h-3.5 w-3.5" />
+            <span>{toastMessage}</span>
+          </div>
+          <button onClick={() => setToastMessage(null)} className="text-white/80 hover:text-white p-0.5 rounded transition-colors">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

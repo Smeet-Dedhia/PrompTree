@@ -17,6 +17,9 @@ export function InputArea() {
   const [compiledCopied, setCompiledCopied] = useState(false);
   const [composerCopied, setComposerCopied] = useState(false);
   const [showTokenInfo, setShowTokenInfo] = useState(false);
+  const [isDraggingCard, setIsDraggingCard] = useState(false);
+  const [draggingCardText, setDraggingCardText] = useState('');
+  const [hoveredLineIndex, setHoveredLineIndex] = useState<number | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textRef = useRef(text);
@@ -60,9 +63,27 @@ export function InputArea() {
       }
     };
 
+    const handleDragStart = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setIsDraggingCard(true);
+      if (customEvent.detail) {
+        setDraggingCardText(customEvent.detail);
+      }
+    };
+
+    const handleDragEnd = () => {
+      setIsDraggingCard(false);
+      setDraggingCardText('');
+      setHoveredLineIndex(null);
+    };
+
     window.addEventListener('insert-prompt', handleInsert);
+    window.addEventListener('prompt-drag-start', handleDragStart);
+    window.addEventListener('prompt-drag-end', handleDragEnd);
     return () => {
       window.removeEventListener('insert-prompt', handleInsert);
+      window.removeEventListener('prompt-drag-start', handleDragStart);
+      window.removeEventListener('prompt-drag-end', handleDragEnd);
     };
   }, []);
 
@@ -170,6 +191,21 @@ export function InputArea() {
     }
   };
 
+  const handleDropAtLine = (lineIndex: number) => {
+    if (!draggingCardText) return;
+    
+    const currentLines = text.split('\n');
+    const beforeSpacing = (lineIndex > 0 && currentLines[lineIndex - 1] !== '') ? '\n' : '';
+    const afterSpacing = '\n';
+    
+    currentLines[lineIndex] = beforeSpacing + draggingCardText + afterSpacing;
+    setText(currentLines.join('\n'));
+    
+    setIsDraggingCard(false);
+    setDraggingCardText('');
+    setHoveredLineIndex(null);
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -266,38 +302,113 @@ export function InputArea() {
           </div>
           
           <div className="flex-1 relative rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-all duration-200 flex flex-col min-h-[140px]">
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              placeholder={
-                selectedTopicId 
-                  ? "Compose your template here. Tip: Use double curly braces, e.g. {{user_name}}, to create dynamic text inputs instantly!" 
-                  : "Please select a topic from the sidebar before composing."
-              }
-              disabled={!selectedTopicId}
-              className={cn(
-                "w-full flex-1 resize-none p-4 text-sm font-mono focus:outline-none bg-transparent leading-relaxed transition-all duration-200 min-h-[120px]",
-                !selectedTopicId && "cursor-not-allowed opacity-60"
-              )}
-            />
+            {isDraggingCard ? (
+              <div 
+                className="w-full flex-1 overflow-y-auto p-4 text-sm font-mono leading-relaxed bg-indigo-50/10 rounded-xl flex flex-col min-h-[120px]"
+                onDragOver={(e) => e.preventDefault()}
+              >
+                <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-indigo-100/50 flex-shrink-0 select-none">
+                  <div className="h-5.5 w-5.5 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center animate-pulse">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="text-[10px] font-sans font-bold text-indigo-850 uppercase tracking-wider">
+                    Snapping drop map: place card content on empty lines only
+                  </div>
+                </div>
 
-            <div
-              className={cn(
-                "absolute inset-0 pointer-events-none border-2 border-dashed rounded-xl flex flex-col items-center justify-center bg-indigo-50/90 backdrop-blur-xs transition-all duration-200 opacity-0 scale-98",
-                isDragOver && "opacity-100 scale-100 border-indigo-500"
-              )}
-            >
-              <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-2 shadow-sm animate-bounce">
-                <Quote className="h-5 w-5" />
+                <div className="flex-1 flex flex-col space-y-1.5 overflow-y-auto">
+                  {text.split('\n').map((line, index) => {
+                    const isEmpty = line === '';
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className="flex items-stretch min-h-[30px] group/line relative"
+                      >
+                        <div className="w-8 select-none text-slate-400 text-[10px] font-mono flex items-center justify-end pr-2.5 border-r border-slate-200/50 flex-shrink-0 font-semibold">
+                          {index + 1}
+                        </div>
+                        
+                        {isEmpty ? (
+                          <div
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              if (hoveredLineIndex !== index) {
+                                setHoveredLineIndex(index);
+                              }
+                            }}
+                            onDragLeave={() => {
+                              setHoveredLineIndex(null);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              handleDropAtLine(index);
+                            }}
+                            className={cn(
+                              "flex-1 ml-3 my-0.5 rounded-lg border border-dashed text-xs flex items-center px-3.5 transition-all duration-150 relative cursor-copy",
+                              hoveredLineIndex === index
+                                ? "border-emerald-500 bg-emerald-50/65 text-emerald-800 ring-2 ring-emerald-100 shadow-xs scale-[1.01]"
+                                : "border-indigo-250 bg-indigo-50/15 text-indigo-500 hover:border-indigo-350 hover:bg-indigo-50/30"
+                            )}
+                          >
+                            {hoveredLineIndex === index ? (
+                              <div className="flex items-center gap-2 font-sans font-bold">
+                                <span className="w-1.5 h-4 bg-emerald-600 animate-pulse rounded-xs" />
+                                <span className="text-emerald-700">↳ Drop to Place Content Here</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 font-sans font-medium opacity-85 select-none text-[10px]">
+                                <span className="w-1 h-3 bg-indigo-400 rounded-xs animate-pulse" />
+                                <span>Empty line - Place content here</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex-1 pl-3 py-1 font-mono text-xs text-slate-700 break-all whitespace-pre-wrap select-none">
+                            {line}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <p className="text-xs font-semibold text-indigo-900">Drop prompt card to insert text</p>
-              <p className="text-[10px] text-indigo-500 mt-0.5">Will be appended at cursor position</p>
-            </div>
+            ) : (
+              <>
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  placeholder={
+                    selectedTopicId 
+                      ? "Compose your template here. Tip: Use double curly braces, e.g. {{user_name}}, to create dynamic text inputs instantly!" 
+                      : "Please select a topic from the sidebar before composing."
+                  }
+                  disabled={!selectedTopicId}
+                  className={cn(
+                    "w-full flex-1 resize-none p-4 text-sm font-mono focus:outline-none bg-transparent leading-relaxed transition-all duration-200 min-h-[120px]",
+                    !selectedTopicId && "cursor-not-allowed opacity-60"
+                  )}
+                />
+
+                <div
+                  className={cn(
+                    "absolute inset-0 pointer-events-none border-2 border-dashed rounded-xl flex flex-col items-center justify-center bg-indigo-50/90 backdrop-blur-xs transition-all duration-200 opacity-0 scale-98",
+                    isDragOver && "opacity-100 scale-100 border-indigo-500"
+                  )}
+                >
+                  <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-2 shadow-sm animate-bounce">
+                    <Quote className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs font-semibold text-indigo-900">Drop prompt card to insert text</p>
+                  <p className="text-[10px] text-indigo-500 mt-0.5">Will be appended at cursor position</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
