@@ -4,6 +4,8 @@ export interface Prompt {
   text: string;
   topicId?: string;
   isStarred?: boolean;
+  tags?: string[];
+  createdAt?: number;
 }
 
 export interface Topic {

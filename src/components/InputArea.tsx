@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Save, HelpCircle, FilePlus2, Quote, Sparkles, Copy, Check } from 'lucide-react';
+import { Save, HelpCircle, FilePlus2, Quote, Sparkles, Copy, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
@@ -12,9 +12,11 @@ import { cn } from '@/lib/utils';
 export function InputArea() {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
+  const [tagsText, setTagsText] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [varValues, setVarValues] = useState<Record<string, string>>({});
   const [compiledCopied, setCompiledCopied] = useState(false);
+  const [showTokenInfo, setShowTokenInfo] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textRef = useRef(text);
@@ -96,6 +98,13 @@ export function InputArea() {
     setTimeout(() => setCompiledCopied(false), 1500);
   };
 
+  const parseTags = (str: string): string[] => {
+    return str
+      .split(',')
+      .map(tag => tag.trim().toLowerCase())
+      .filter(tag => tag.length > 0);
+  };
+
   const handleSaveToTopic = async () => {
     if (!text.trim() || !selectedTopicId) return;
 
@@ -105,11 +114,14 @@ export function InputArea() {
       id: crypto.randomUUID(),
       title: promptTitle,
       text: text.trim(),
+      tags: parseTags(tagsText),
+      createdAt: Date.now(),
     };
 
     await addPrompt(selectedTopicId, newPrompt);
     setText('');
     setTitle('');
+    setTagsText('');
     setVarValues({});
   };
 
@@ -166,6 +178,11 @@ export function InputArea() {
     setIsDragOver(false);
   };
 
+  // Live Metric Calculations
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const sentenceCount = text.trim() ? text.trim().split(/[.!?]+/).filter(Boolean).length : 0;
+  const tokenEstimate = Math.ceil(text.length / 4);
+
   return (
     <div className="w-full max-w-xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm custom-shadow flex flex-col overflow-hidden h-[680px]">
       <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex-shrink-0">
@@ -197,17 +214,31 @@ export function InputArea() {
       </div>
       
       <div className="flex-1 p-5 flex flex-col min-h-0 bg-slate-50/10 overflow-y-auto space-y-4">
-        <div className="flex-shrink-0">
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-            Prompt Title <span className="text-[10px] font-normal text-slate-400">(optional)</span>
-          </label>
-          <Input
-            type="text"
-            placeholder="Give your prompt a reference title..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-150"
-          />
+        <div className="mb-4 flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Prompt Title <span className="text-[10px] font-normal text-slate-400">(optional)</span>
+            </label>
+            <Input
+              type="text"
+              placeholder="Give your prompt a title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-150"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Tags <span className="text-[10px] font-normal text-slate-400">(comma-separated)</span>
+            </label>
+            <Input
+              type="text"
+              placeholder="e.g. system, coding, few-shot"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-150"
+            />
+          </div>
         </div>
         
         <div className="flex-1 flex flex-col min-h-[220px]">
@@ -309,12 +340,54 @@ export function InputArea() {
           </div>
         )}
         
-        <div className="flex items-center justify-between text-[11px] text-slate-400 bg-slate-50 border border-slate-100 p-2.5 rounded-lg flex-shrink-0">
-          <div className="flex items-center gap-1.5">
-            <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
-            <span>Click any card on the board to insert it directly.</span>
+        <div className="flex items-center justify-between text-[11px] text-slate-400 bg-slate-50 border border-slate-100 p-2.5 rounded-lg flex-shrink-0 relative">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <span className="font-semibold text-slate-600">Tokens:</span>
+              <span className="font-mono text-slate-800 bg-indigo-50/50 text-indigo-700 px-1.5 py-0.5 rounded font-bold">{tokenEstimate}</span>
+              <button
+                type="button"
+                onClick={() => setShowTokenInfo(!showTokenInfo)}
+                className="text-slate-400 hover:text-slate-600 p-0.5 rounded transition-colors"
+                title="Token estimation details"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+              </button>
+            </span>
+            <span className="h-3 w-px bg-slate-200" />
+            <span className="flex items-center gap-1">
+              <span className="font-semibold text-slate-600">Words:</span>
+              <span className="font-mono text-slate-800">{wordCount}</span>
+            </span>
+            <span className="h-3 w-px bg-slate-200" />
+            <span className="flex items-center gap-1">
+              <span className="font-semibold text-slate-600">Sentences:</span>
+              <span className="font-mono text-slate-800">{sentenceCount}</span>
+            </span>
           </div>
-          <span className="font-mono">{text.length} chars</span>
+          
+          <span className="font-mono text-slate-500 font-semibold">{text.length} chars</span>
+
+          {showTokenInfo && (
+            <div className="absolute bottom-12 left-2.5 right-2.5 bg-white border border-slate-200 rounded-xl shadow-xl p-3.5 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 text-slate-600 leading-relaxed text-[11px]">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-1.5">
+                <span className="font-bold text-slate-850 uppercase tracking-wider text-[10px]">About Token Estimation</span>
+                <button
+                  onClick={() => setShowTokenInfo(false)}
+                  className="text-slate-400 hover:text-slate-600 p-0.5 rounded"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <p className="mb-1.5 text-slate-500">
+                Tokens are the basic processing units for LLMs. In English text, a token is roughly equivalent to **4 characters** or about **0.75 words**.
+              </p>
+              <p className="font-medium text-indigo-600 bg-indigo-50/50 p-2 rounded-lg font-mono text-[10px]">
+                Formula: Math.ceil(characters / 4)
+              </p>
+              <div className="absolute -bottom-1.5 left-16 w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45" />
+            </div>
+          )}
         </div>
 
       </div>

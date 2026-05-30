@@ -16,18 +16,23 @@ interface PromptCardsProps {
 export function PromptCards({ topicId }: PromptCardsProps) {
   const { topics, toggleStarPrompt, deletePrompt, addPrompt } = useAppStore();
   
+  // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [globalSearch, setGlobalSearch] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<'recent' | 'title' | 'length' | 'starred'>('recent');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Quick Add States
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickTitle, setQuickTitle] = useState('');
   const [quickText, setQuickText] = useState('');
+  const [quickTags, setQuickTags] = useState('');
 
   useEffect(() => {
     setSearchQuery('');
+    setSelectedTag(null);
     setShowQuickAdd(false);
   }, [topicId]);
 
@@ -50,6 +55,13 @@ export function PromptCards({ topicId }: PromptCardsProps) {
     window.dispatchEvent(new CustomEvent('insert-prompt', { detail: text }));
   };
 
+  const parseTags = (str: string): string[] => {
+    return str
+      .split(',')
+      .map(tag => tag.trim().toLowerCase())
+      .filter(tag => tag.length > 0);
+  };
+
   const handleQuickSave = async () => {
     if (!quickText.trim() || !topicId) return;
 
@@ -59,14 +71,40 @@ export function PromptCards({ topicId }: PromptCardsProps) {
       id: crypto.randomUUID(),
       title: titleValue,
       text: quickText.trim(),
+      tags: parseTags(quickTags),
+      createdAt: Date.now(),
     };
 
     await addPrompt(topicId, newPrompt);
     setQuickTitle('');
     setQuickText('');
+    setQuickTags('');
     setShowQuickAdd(false);
   };
 
+  // Compile unique tags for display filter
+  const getAllUniqueTags = () => {
+    const tagsSet = new Set<string>();
+    
+    if (globalSearch) {
+      topics.forEach(topic => {
+        topic.prompts.forEach(prompt => {
+          prompt.tags?.forEach(tag => tagsSet.add(tag));
+        });
+      });
+    } else {
+      const currentTopic = topics.find(t => t.id === topicId);
+      currentTopic?.prompts.forEach(prompt => {
+        prompt.tags?.forEach(tag => tagsSet.add(tag));
+      });
+    }
+
+    return Array.from(tagsSet);
+  };
+
+  const uniqueTags = getAllUniqueTags();
+
+  // Compile active list of prompts based on selected topic and search criteria
   const getFilteredPrompts = () => {
     let sourceList: (Prompt & { originTopicName: string; originTopicId: string })[] = [];
 
@@ -93,16 +131,40 @@ export function PromptCards({ topicId }: PromptCardsProps) {
       }
     }
 
+    // Apply Starred filter
     if (showStarredOnly) {
       sourceList = sourceList.filter(p => p.isStarred);
     }
 
+    // Apply Tag filter
+    if (selectedTag) {
+      sourceList = sourceList.filter(p => p.tags?.includes(selectedTag));
+    }
+
+    // Apply Search Query filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       sourceList = sourceList.filter(
         p => p.title.toLowerCase().includes(query) || p.text.toLowerCase().includes(query)
       );
     }
+
+    // Apply Sorting
+    sourceList.sort((a, b) => {
+      if (sortMode === 'title') {
+        return a.title.localeCompare(b.title);
+      }
+      if (sortMode === 'length') {
+        return b.text.length - a.text.length;
+      }
+      if (sortMode === 'starred') {
+        if (a.isStarred && !b.isStarred) return -1;
+        if (!a.isStarred && b.isStarred) return 1;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      }
+      // 'recent' sorting (newest first)
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
 
     return sourceList;
   };
@@ -113,7 +175,7 @@ export function PromptCards({ topicId }: PromptCardsProps) {
     <div className="space-y-4">
       
       {/* Search and Filters Dashboard Control Center */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3.5">
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
@@ -125,7 +187,7 @@ export function PromptCards({ topicId }: PromptCardsProps) {
           />
         </div>
         
-        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setGlobalSearch(!globalSearch)}
             className={cn(
@@ -158,6 +220,7 @@ export function PromptCards({ topicId }: PromptCardsProps) {
               setShowQuickAdd(!showQuickAdd);
               setQuickTitle('');
               setQuickText('');
+              setQuickTags('');
             }}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 active:scale-95",
@@ -170,26 +233,88 @@ export function PromptCards({ topicId }: PromptCardsProps) {
             <span>Quick Add</span>
           </button>
           
-          {(searchQuery || globalSearch || showStarredOnly) && (
+          {(searchQuery || globalSearch || showStarredOnly || selectedTag) && (
             <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-1 rounded-md ml-auto">
               Found {filteredList.length} match{filteredList.length !== 1 ? 'es' : ''}
             </span>
           )}
         </div>
+
+        {/* Sort & Tag Filter Pills Row */}
+        <div className="flex flex-col gap-2 pt-2.5 border-t border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-slate-400">
+            <span className="font-semibold uppercase tracking-wider">Sort & Tags Filter</span>
+            
+            {/* Sort Dropdown Selector */}
+            <div className="flex items-center gap-1.5">
+              <span>Sort:</span>
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as typeof sortMode)}
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+              >
+                <option value="recent">Recent Created</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="length">Length (Size)</option>
+                <option value="starred">Starred First</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Clickable Tag Filter Pills */}
+          {uniqueTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <button
+                onClick={() => setSelectedTag(null)}
+                className={cn(
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-medium border transition-colors",
+                  selectedTag === null
+                    ? "bg-indigo-650 text-indigo-700 bg-indigo-50 border-indigo-200"
+                    : "bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200/60"
+                )}
+              >
+                All Tags
+              </button>
+              {uniqueTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                  className={cn(
+                    "px-2.5 py-0.5 rounded-full text-[10px] font-medium border transition-colors",
+                    selectedTag === tag
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200/60"
+                  )}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Collapsible Inline discreet Quick Add form */}
+      {/* Collapsible Inline Quick Add form */}
       {showQuickAdd && (
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
           <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Quick Add Prompt</h4>
           <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Prompt title (optional)..."
-              value={quickTitle}
-              onChange={(e) => setQuickTitle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all duration-150"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Prompt title (optional)..."
+                value={quickTitle}
+                onChange={(e) => setQuickTitle(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all duration-150"
+              />
+              <input
+                type="text"
+                placeholder="Tags (comma-separated)..."
+                value={quickTags}
+                onChange={(e) => setQuickTags(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white transition-all duration-150"
+              />
+            </div>
             <textarea
               placeholder="Write prompt instructions here..."
               value={quickText}
@@ -223,20 +348,21 @@ export function PromptCards({ topicId }: PromptCardsProps) {
               <FileText className="h-6 w-6 stroke-[1.5]" />
             </div>
             <h4 className="font-semibold text-slate-700 text-sm mb-1">
-              {searchQuery || showStarredOnly ? "No matching prompts found" : "No prompts inside this topic"}
+              {searchQuery || showStarredOnly || selectedTag ? "No matching prompts found" : "No prompts inside this topic"}
             </h4>
             <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-              {searchQuery || showStarredOnly 
+              {searchQuery || showStarredOnly || selectedTag 
                 ? "Try clearing filters, searching globally, or modifying your search query." 
                 : "Create prompt template cards in the workspace composer on the right."}
             </p>
-            {(searchQuery || showStarredOnly) && (
+            {(searchQuery || showStarredOnly || selectedTag) && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
                   setSearchQuery('');
                   setShowStarredOnly(false);
+                  setSelectedTag(null);
                 }}
                 className="mt-4 border border-slate-200 rounded-xl px-4 text-xs"
               >
@@ -287,6 +413,30 @@ export function PromptCards({ topicId }: PromptCardsProps) {
                       <p className="text-xs text-slate-500 leading-relaxed font-normal line-clamp-3 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100/50 font-mono mt-1.5 whitespace-pre-wrap">
                         {prompt.text}
                       </p>
+
+                      {/* Render tag badges */}
+                      {prompt.tags && prompt.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2.5">
+                          {prompt.tags.map(tag => (
+                            <span
+                              key={tag}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTag(selectedTag === tag ? null : tag);
+                              }}
+                              className={cn(
+                                "text-[9px] font-semibold border px-2 py-0.5 rounded-full transition-colors",
+                                selectedTag === tag
+                                  ? "bg-indigo-650 text-indigo-750 bg-indigo-50 border-indigo-200"
+                                  : "bg-slate-100 text-slate-600 border-slate-200/50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100"
+                              )}
+                              title={`Filter by tag #${tag}`}
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
