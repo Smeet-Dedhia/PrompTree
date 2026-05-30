@@ -497,13 +497,17 @@ export function PromptCards({ topicId }: PromptCardsProps) {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-400">
-                    <span className="font-mono text-[9px] bg-slate-100/80 px-1.5 py-0.5 rounded text-slate-500">
+                  <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-450 font-medium">
+                    <span className="font-mono text-[9px] bg-slate-100 border border-slate-200/50 px-1.5 py-0.5 rounded text-slate-500">
                       Index #{index + 1}
                     </span>
-                    <span>
-                      {prompt.text.length} characters
-                    </span>
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <span>{Math.ceil(prompt.text.length / 4)} tokens</span>
+                      <span className="text-slate-300">•</span>
+                      <span>{prompt.text.trim() ? prompt.text.trim().split(/\s+/).length : 0} words</span>
+                      <span className="text-slate-300">•</span>
+                      <span>{prompt.text.length} chars</span>
+                    </div>
                   </div>
 
                 </div>
