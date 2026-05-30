@@ -33,44 +33,47 @@ export function AddTopicDialog() {
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-colors font-medium"
+          className="w-full border border-indigo-200 bg-indigo-50/20 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-800 transition-all duration-150 font-medium rounded-xl h-9 hover:-translate-y-0.5 active:scale-98"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-1.5 flex-shrink-0" />
           Add Topic
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      
+      <DialogContent className="sm:max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Add New Topic</DialogTitle>
+          <DialogTitle className="text-lg font-bold text-slate-800">Create New Topic</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Topic Name
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Topic Title
             </label>
             <Input
-              placeholder="Enter topic name..."
+              placeholder="Enter a descriptive topic category name..."
               value={topicName}
               onChange={(e) => setTopicName(e.target.value)}
-              className="border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+              className="border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-colors"
               autoFocus
             />
           </div>
-          <div className="flex justify-end space-x-3 pt-4">
+          
+          <div className="flex justify-end gap-2.5 pt-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-2 border-gray-200 hover:border-gray-400 transition-colors"
+              className="border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl px-4"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={!topicName.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-medium px-5 rounded-xl border-none transition-all duration-200"
             >
-              Add Topic
+              Create Topic
             </Button>
           </div>
         </form>

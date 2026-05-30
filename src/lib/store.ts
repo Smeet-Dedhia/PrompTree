@@ -81,6 +81,32 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
   },
 
+  toggleStarPrompt: async (topicId: string, promptId: string) => {
+    const state = get();
+    let promptToUpdate: Prompt | undefined;
+    
+    const updatedTopics = state.topics.map(topic => {
+      if (topic.id === topicId) {
+        return {
+          ...topic,
+          prompts: topic.prompts.map(prompt => {
+            if (prompt.id === promptId) {
+              promptToUpdate = { ...prompt, isStarred: !prompt.isStarred };
+              return promptToUpdate;
+            }
+            return prompt;
+          })
+        };
+      }
+      return topic;
+    });
+
+    if (promptToUpdate) {
+      await savePrompt({ ...promptToUpdate, topicId });
+    }
+    set({ topics: updatedTopics });
+  },
+
   reorderPrompts: async (topicId: string, newOrder: Prompt[]) => {
     const state = get();
     const updatedTopics = state.topics.map(topic =>

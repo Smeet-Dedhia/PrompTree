@@ -3,6 +3,7 @@ export interface Prompt {
   title: string;
   text: string;
   topicId?: string;
+  isStarred?: boolean;
 }
 
 export interface Topic {
@@ -20,6 +21,7 @@ export interface AppState {
   addPrompt: (topicId: string, prompt: Prompt) => void;
   editPrompt: (topicId: string, promptId: string, updated: Prompt) => void;
   deletePrompt: (topicId: string, promptId: string) => void;
+  toggleStarPrompt: (topicId: string, promptId: string) => Promise<void>;
   reorderPrompts: (topicId: string, newOrder: Prompt[]) => void;
   setSelectedTopic: (topicId: string | null) => void;
   initialize: () => Promise<void>;

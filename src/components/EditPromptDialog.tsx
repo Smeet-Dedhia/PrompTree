@@ -47,46 +47,50 @@ export function EditPromptDialog({ topicId, prompt, trigger }: EditPromptDialogP
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      
+      <DialogContent className="sm:max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Edit Prompt</DialogTitle>
+          <DialogTitle className="text-lg font-bold text-slate-800">Edit Prompt Details</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        
+        <form onSubmit={handleSubmit} className="space-y-5 pt-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Title
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Prompt Title
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter prompt title..."
-              className="border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+              placeholder="Enter a recognizable title..."
+              className="border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-colors"
             />
           </div>
+          
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Content
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              Prompt Body Content
             </label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Enter prompt content..."
-              className="w-full min-h-[200px] rounded-lg border-2 border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-white transition-all duration-200 font-mono resize-none"
+              placeholder="Enter prompt instruction body..."
+              className="w-full min-h-[220px] rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 resize-none leading-relaxed"
             />
           </div>
-          <div className="flex justify-end space-x-3 pt-4">
+          
+          <div className="flex justify-end gap-2.5 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-2 border-gray-200 hover:border-gray-400 transition-colors"
+              className="border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl px-4"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={!title.trim() || !text.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-medium px-5 rounded-xl border-none transition-all duration-200"
             >
               Save Changes
             </Button>
