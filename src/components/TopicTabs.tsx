@@ -5,6 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Folder, FolderOpen, Pencil, Trash2, Check, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SaveLoadButtons } from './SaveLoadButtons';
 
 export function TopicTabs() {
   const { topics, selectedTopicId, setSelectedTopic, editTopic, deleteTopic, addTopic } = useAppStore();
@@ -158,9 +159,9 @@ export function TopicTabs() {
         )}
       </div>
       
-      <div className="p-4 border-t border-slate-100 bg-slate-50/20 relative">
+      <div className="p-4 border-t border-slate-100 bg-slate-50/20 relative flex flex-col gap-3 flex-shrink-0">
         {showAddOverlay && (
-          <div className="absolute bottom-16 left-4 right-4 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <div className="absolute bottom-28 left-4 right-4 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Create Topic</h4>
             <div className="flex flex-col gap-2">
               <input
@@ -207,6 +208,11 @@ export function TopicTabs() {
           <Plus className="h-4 w-4 mr-1.5 flex-shrink-0" />
           Add Topic
         </Button>
+
+        <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Backup Workspace</span>
+          <SaveLoadButtons />
+        </div>
       </div>
     </div>
   );

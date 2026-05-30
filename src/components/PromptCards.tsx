@@ -439,57 +439,61 @@ export function PromptCards({ topicId }: PromptCardsProps) {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={async () => await toggleStarPrompt(prompt.originTopicId, prompt.id)}
                         className={cn(
-                          "h-8 w-8 text-slate-400 rounded-lg transition-colors duration-150",
-                          isStarred ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50" : "hover:bg-slate-100 hover:text-amber-500"
+                          "h-8 w-8 rounded-lg transition-all duration-150",
+                          isStarred 
+                            ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50" 
+                            : "text-slate-400 hover:text-amber-500 hover:bg-slate-100 opacity-0 group-hover:opacity-100"
                         )}
                         title={isStarred ? "Unstar prompt" : "Star prompt"}
                       >
                         <Star className={cn("h-3.5 w-3.5", isStarred && "fill-amber-500")} />
                       </Button>
 
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => handleCopy(e, prompt.id, prompt.text)}
-                        className={cn(
-                          "h-8 w-8 rounded-lg transition-colors duration-150",
-                          isCopied ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:bg-slate-100 hover:text-indigo-600"
-                        )}
-                        title="Copy text to clipboard"
-                      >
-                        {isCopied ? <Check className="h-3.5 w-3.5 animate-in zoom-in-50" /> : <Copy className="h-3.5 w-3.5" />}
-                      </Button>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-155">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) => handleCopy(e, prompt.id, prompt.text)}
+                          className={cn(
+                            "h-8 w-8 rounded-lg transition-colors duration-150",
+                            isCopied ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:bg-slate-100 hover:text-indigo-600"
+                          )}
+                          title="Copy text to clipboard"
+                        >
+                          {isCopied ? <Check className="h-3.5 w-3.5 animate-in zoom-in-50" /> : <Copy className="h-3.5 w-3.5" />}
+                        </Button>
 
-                      <EditPromptDialog
-                        topicId={prompt.originTopicId}
-                        prompt={prompt}
-                        trigger={
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-8 w-8 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 rounded-lg"
-                            title="Edit prompt details"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                        }
-                      />
+                        <EditPromptDialog
+                          topicId={prompt.originTopicId}
+                          prompt={prompt}
+                          trigger={
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-8 w-8 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 rounded-lg"
+                              title="Edit prompt details"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                          }
+                        />
 
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDelete(prompt.originTopicId, prompt.id)}
-                        className="h-8 w-8 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg"
-                        title="Delete prompt template"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDelete(prompt.originTopicId, prompt.id)}
+                          className="h-8 w-8 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg"
+                          title="Delete prompt template"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   
