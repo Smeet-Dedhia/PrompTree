@@ -49,13 +49,13 @@ export default function Home() {
 
       <div className="flex flex-1 overflow-hidden w-full">
         
-        <aside className="w-80 border-r border-slate-200 bg-slate-50/50 flex flex-col flex-shrink-0">
+        <aside className="w-56 border-r border-slate-200 bg-slate-50/50 flex flex-col flex-shrink-0">
           <div className="flex-1 overflow-y-auto p-4">
             <TopicTabs />
           </div>
         </aside>
         
-        <main className="flex-1 bg-white flex flex-col overflow-hidden">
+        <main className="w-[500px] bg-white flex flex-col overflow-hidden flex-shrink-0">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/20">
             <div className="flex items-center gap-2.5">
               <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
@@ -93,8 +93,8 @@ export default function Home() {
           </div>
         </main>
         
-        <section className="w-[500px] border-l border-slate-200 bg-slate-50/50 flex flex-col flex-shrink-0 overflow-y-auto">
-          <div className="p-6 flex-1 flex flex-col justify-center min-h-[500px]">
+        <section className="flex-1 border-l border-slate-200 bg-slate-50/50 flex flex-col overflow-hidden">
+          <div className="p-6 flex-1 flex flex-col min-h-0">
             <InputArea />
           </div>
         </section>

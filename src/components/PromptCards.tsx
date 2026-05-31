@@ -401,45 +401,16 @@ export function PromptCards({ topicId }: PromptCardsProps) {
                 </div>
 
                 <div className="p-4 pl-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-slate-800 truncate">
-                          {prompt.title}
-                        </h3>
-                        {globalSearch && (
-                          <span className="text-[9px] font-medium bg-slate-100 border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded">
-                            {prompt.originTopicName}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className="text-xs text-slate-500 leading-relaxed font-normal line-clamp-3 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100/50 font-mono mt-1.5 whitespace-pre-wrap">
-                        {prompt.text}
-                      </p>
-
-                      {/* Render tag badges */}
-                      {prompt.tags && prompt.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2.5">
-                          {prompt.tags.map(tag => (
-                            <span
-                              key={tag}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTag(selectedTag === tag ? null : tag);
-                              }}
-                              className={cn(
-                                "text-[9px] font-semibold border px-2 py-0.5 rounded-full transition-colors",
-                                selectedTag === tag
-                                  ? "bg-indigo-650 text-indigo-750 bg-indigo-50 border-indigo-200"
-                                  : "bg-slate-100 text-slate-600 border-slate-200/50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100"
-                              )}
-                              title={`Filter by tag #${tag}`}
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
+                  {/* Top Row: Title, Topic Tag, and Actions */}
+                  <div className="flex items-center justify-between gap-4 mb-2.5">
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-slate-800 truncate">
+                        {prompt.title}
+                      </h3>
+                      {globalSearch && (
+                        <span className="text-[9px] font-medium bg-slate-100 border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded">
+                          {prompt.originTopicName}
+                        </span>
                       )}
                     </div>
 
@@ -499,6 +470,40 @@ export function PromptCards({ topicId }: PromptCardsProps) {
                         </Button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Body Content: Full-width Text Area and Tags */}
+                  <div className="space-y-2.5">
+                    <p 
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full max-h-[140px] overflow-y-auto text-xs text-slate-500 leading-relaxed font-normal bg-slate-50/50 p-2.5 rounded-lg border border-slate-100/50 font-mono whitespace-pre-wrap"
+                    >
+                      {prompt.text}
+                    </p>
+
+                    {/* Render tag badges */}
+                    {prompt.tags && prompt.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {prompt.tags.map(tag => (
+                          <span
+                            key={tag}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedTag(selectedTag === tag ? null : tag);
+                            }}
+                            className={cn(
+                              "text-[9px] font-semibold border px-2 py-0.5 rounded-full transition-colors",
+                              selectedTag === tag
+                                ? "bg-indigo-650 text-indigo-750 bg-indigo-50 border-indigo-200"
+                                : "bg-slate-100 text-slate-600 border-slate-200/50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100"
+                            )}
+                            title={`Filter by tag #${tag}`}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-450 font-medium">

@@ -127,7 +127,38 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Initialize store with data from IndexedDB
   initialize: async () => {
-    const topics = await loadTopics();
-    set({ topics });
+    let topics = await loadTopics();
+    
+    if (topics.length === 0) {
+      const { SEED_TOPICS } = await import('./seeds');
+      const seededTopics: Topic[] = [];
+      
+      for (const t of SEED_TOPICS) {
+        const topicId = crypto.randomUUID();
+        const prompts: Prompt[] = t.prompts.map(p => ({
+          ...p,
+          id: crypto.randomUUID(),
+          topicId
+        }));
+        
+        const newTopic: Topic = {
+          id: topicId,
+          name: t.name,
+          prompts
+        };
+        
+        await saveTopic(newTopic);
+        for (const prompt of prompts) {
+          await savePrompt({ ...prompt, topicId });
+        }
+        seededTopics.push(newTopic);
+      }
+      topics = seededTopics;
+    }
+    
+    const selectedId = get().selectedTopicId;
+    const nextSelectedId = selectedId || (topics.length > 0 ? topics[0].id : null);
+    
+    set({ topics, selectedTopicId: nextSelectedId });
   }
 }));

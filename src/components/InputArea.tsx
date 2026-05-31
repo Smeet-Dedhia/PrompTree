@@ -8,6 +8,18 @@ import { useAppStore } from '@/lib/store';
 import { Prompt } from '@/types';
 import { cn } from '@/lib/utils';
 
+const formatTruncatedLine = (line: string): string => {
+  const trimmed = line.trim();
+  if (!trimmed) return '';
+  const words = trimmed.split(/\s+/);
+  if (words.length > 8) {
+    const firstFew = words.slice(0, 3).join(' ');
+    const lastFew = words.slice(-3).join(' ');
+    return `${firstFew} ... ${lastFew}`;
+  }
+  return line;
+};
+
 export function InputArea() {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -20,6 +32,7 @@ export function InputArea() {
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   const [draggingCardText, setDraggingCardText] = useState('');
   const [hoveredLineIndex, setHoveredLineIndex] = useState<number | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textRef = useRef(text);
@@ -34,11 +47,11 @@ export function InputArea() {
       if (customEvent.detail) {
         const insertText = customEvent.detail;
         const currentText = textRef.current;
-        
+
         const cursorPosition = textareaRef.current?.selectionStart || 0;
         const beforeCursor = currentText.slice(0, cursorPosition);
         const afterCursor = currentText.slice(cursorPosition);
-        
+
         let spacing = '';
         if (beforeCursor.trim()) {
           if (beforeCursor.endsWith('\n\n')) {
@@ -49,10 +62,10 @@ export function InputArea() {
             spacing = '\n\n';
           }
         }
-        
+
         const newInsertion = spacing + insertText;
         setText(beforeCursor + newInsertion + afterCursor);
-        
+
         setTimeout(() => {
           if (textareaRef.current) {
             const newPosition = cursorPosition + newInsertion.length;
@@ -136,7 +149,7 @@ export function InputArea() {
     if (!text.trim() || !selectedTopicId) return;
 
     const promptTitle = title.trim() || text.split('\n')[0].slice(0, 50) + (text.split('\n')[0].length > 50 ? '...' : '');
-    
+
     const newPrompt: Prompt = {
       id: crypto.randomUUID(),
       title: promptTitle,
@@ -155,15 +168,15 @@ export function InputArea() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     try {
       const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
-      
+
       if (dragData.type === 'prompt-card' && dragData.text) {
         const cursorPosition = textareaRef.current?.selectionStart || 0;
         const beforeCursor = text.slice(0, cursorPosition);
         const afterCursor = text.slice(cursorPosition);
-        
+
         let spacing = '';
         if (beforeCursor.trim()) {
           if (beforeCursor.endsWith('\n\n')) {
@@ -174,10 +187,10 @@ export function InputArea() {
             spacing = '\n\n';
           }
         }
-        
+
         const newInsertion = spacing + dragData.text;
         setText(beforeCursor + newInsertion + afterCursor);
-        
+
         setTimeout(() => {
           if (textareaRef.current) {
             const newPosition = cursorPosition + newInsertion.length;
@@ -193,14 +206,14 @@ export function InputArea() {
 
   const handleDropAtLine = (lineIndex: number) => {
     if (!draggingCardText) return;
-    
+
     const currentLines = text.split('\n');
     const beforeSpacing = (lineIndex > 0 && currentLines[lineIndex - 1] !== '') ? '\n' : '';
     const afterSpacing = '\n';
-    
+
     currentLines[lineIndex] = beforeSpacing + draggingCardText + afterSpacing;
     setText(currentLines.join('\n'));
-    
+
     setIsDraggingCard(false);
     setDraggingCardText('');
     setHoveredLineIndex(null);
@@ -225,7 +238,7 @@ export function InputArea() {
   const tokenEstimate = Math.ceil(text.length / 4);
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm custom-shadow flex flex-col overflow-hidden h-[680px]">
+    <div className="w-full h-full bg-white border border-slate-200 rounded-2xl shadow-sm custom-shadow flex flex-col overflow-hidden">
       <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -234,8 +247,62 @@ export function InputArea() {
             </div>
             <h2 className="text-sm font-semibold text-slate-800">Prompt Composer</h2>
           </div>
-          
+
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!text.trim()}
+                onClick={() => {
+                  if (text.trim().length <= 50) {
+                    setText('');
+                    setTitle('');
+                    setTagsText('');
+                    setVarValues({});
+                  } else {
+                    setShowClearConfirm(true);
+                  }
+                }}
+                className="h-9 px-3 rounded-xl border border-rose-250 bg-rose-50/45 text-rose-700 hover:bg-rose-50 hover:text-rose-800 disabled:opacity-50 disabled:pointer-events-none transition-all duration-150 hover:-translate-y-0.5 font-medium text-xs"
+              >
+                <X className="h-3.5 w-3.5 mr-1" />
+                <span>Clear</span>
+              </Button>
+
+              {showClearConfirm && (
+                <div className="absolute top-11 left-0 w-60 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+                  <p className="text-[11px] font-semibold text-slate-850 mb-2.5 leading-relaxed">
+                    Clear composer draft? This action cannot be undone.
+                  </p>
+                  <div className="flex justify-end gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowClearConfirm(false)}
+                      className="h-7 px-2.5 rounded-lg border border-slate-200 text-[10px] text-slate-500 font-medium"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setText('');
+                        setTitle('');
+                        setTagsText('');
+                        setVarValues({});
+                        setShowClearConfirm(false);
+                      }}
+                      className="h-7 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-750 text-[10px] text-white font-semibold shadow-xs border-none"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  <div className="absolute -top-1 left-4 w-2.5 h-2.5 bg-white border-l border-t border-slate-200 rotate-45" />
+                </div>
+              )}
+            </div>
+
             <Button
               size="sm"
               variant="outline"
@@ -273,7 +340,7 @@ export function InputArea() {
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1 p-5 flex flex-col min-h-0 bg-slate-50/10 overflow-y-auto space-y-4">
         {/* Title Input at Top */}
         <div className="flex-shrink-0">
@@ -288,7 +355,7 @@ export function InputArea() {
             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-150"
           />
         </div>
-        
+
         {/* Monospace Text Area in Middle */}
         <div className="flex-1 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between mb-1.5 flex-shrink-0">
@@ -300,10 +367,10 @@ export function InputArea() {
               <span>Supports Drag & Click-to-Insert</span>
             </div>
           </div>
-          
+
           <div className="flex-1 relative rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-all duration-200 flex flex-col min-h-[140px]">
             {isDraggingCard ? (
-              <div 
+              <div
                 className="w-full flex-1 overflow-y-auto p-4 text-sm font-mono leading-relaxed bg-indigo-50/10 rounded-xl flex flex-col min-h-[120px]"
                 onDragOver={(e) => e.preventDefault()}
               >
@@ -312,23 +379,23 @@ export function InputArea() {
                     <Sparkles className="h-3.5 w-3.5" />
                   </div>
                   <div className="text-[10px] font-sans font-bold text-indigo-850 uppercase tracking-wider">
-                    Snapping drop map: place card content on empty lines only
+                    Snap & Drop: Place card content on empty lines only
                   </div>
                 </div>
 
                 <div className="flex-1 flex flex-col space-y-1.5 overflow-y-auto">
                   {text.split('\n').map((line, index) => {
                     const isEmpty = line === '';
-                    
+
                     return (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex items-stretch min-h-[30px] group/line relative"
                       >
                         <div className="w-8 select-none text-slate-400 text-[10px] font-mono flex items-center justify-end pr-2.5 border-r border-slate-200/50 flex-shrink-0 font-semibold">
                           {index + 1}
                         </div>
-                        
+
                         {isEmpty ? (
                           <div
                             onDragOver={(e) => {
@@ -364,8 +431,8 @@ export function InputArea() {
                             )}
                           </div>
                         ) : (
-                          <div className="flex-1 pl-3 py-1 font-mono text-xs text-slate-700 break-all whitespace-pre-wrap select-none">
-                            {line}
+                          <div className="flex-1 pl-3 py-1 font-mono text-xs text-slate-400 italic break-all whitespace-pre-wrap select-none opacity-80">
+                            {formatTruncatedLine(line)}
                           </div>
                         )}
                       </div>
@@ -384,8 +451,8 @@ export function InputArea() {
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
                   placeholder={
-                    selectedTopicId 
-                      ? "Compose your template here. Tip: Use double curly braces, e.g. {{user_name}}, to create dynamic text inputs instantly!" 
+                    selectedTopicId
+                      ? "Compose your template here. Tip: Use double curly braces, e.g. {{user_name}}, to create dynamic text inputs instantly!"
                       : "Please select a topic from the sidebar before composing."
                   }
                   disabled={!selectedTopicId}
@@ -433,15 +500,15 @@ export function InputArea() {
                 <Sparkles className="h-4 w-4 animate-pulse" />
                 <h3 className="text-xs font-bold uppercase tracking-wider">Dynamic Variables Form</h3>
               </div>
-              
+
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleCopyCompiled}
                 className={cn(
                   "h-7 text-[10px] px-2.5 rounded-lg border transition-all duration-150 hover:-translate-y-0.5 font-medium",
-                  compiledCopied 
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100" 
+                  compiledCopied
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
                     : "bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800"
                 )}
               >
@@ -458,7 +525,7 @@ export function InputArea() {
                 )}
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-[160px] overflow-y-auto pr-1">
               {variables.map(v => (
                 <div key={v} className="space-y-1">
@@ -477,7 +544,7 @@ export function InputArea() {
             </div>
           </div>
         )}
-        
+
         <div className="flex items-center justify-between text-[11px] text-slate-400 bg-slate-50 border border-slate-100 p-2.5 rounded-lg flex-shrink-0 relative">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
@@ -503,7 +570,7 @@ export function InputArea() {
               <span className="font-mono text-slate-800">{sentenceCount}</span>
             </span>
           </div>
-          
+
           <span className="font-mono text-slate-500 font-semibold">{text.length} chars</span>
 
           {showTokenInfo && (
